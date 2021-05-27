@@ -1,4 +1,5 @@
 import turtle
+import math
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -30,17 +31,24 @@ class Sprite():
         self.dx= 0
         self.dy = 0    
         self.heading = 0
-        self.da  = 0
+        self.da = 0
+        self.thrust = 0.0
+        self.acceleration = 0.2
 
     def update(self):
+
+        self.heading += self.da
+        self.heading %= 360
+
+        self.dx += math.cos(math.radians(self.heading)) * self.thrust
+        self.dy += math.sin(math.radians(self.heading)) * self.thrust
+
         self.x += self.dx
         self.y += self.dy
-        self.heading += self.da     
-
 
     def render(self, pen):
         pen.goto(self.x, self.y)
-        pen.setheading(0)
+        pen.setheading(self.heading)
         pen.shape(self.shape)
         pen.color(self.color)
         pen.stamp()
@@ -60,29 +68,41 @@ class Player(Sprite):
         self.da = -5
 
     def stop_rotating(self):
-        self.da = 0 
+        self.da = 0
 
-    def update(self):
-        self.x += self.dx
-        self.y += self.dy
+    def accelerate(self):
+        self.thrust += self.acceleration
 
+    def desaccelaration(self):
+        self.thrust = 0.0 
+
+    def render(self, pen):
+        pen.shapesize(0.5, 1.0, None)
+        pen.goto(self.x, self.y)
+        pen.setheading(self.heading)
+        pen.shape(self.shape)
+        pen.color(self.color)
+        pen.stamp()
+
+        pen.shapesize(1.0, 1.0, None)
 
 #create player
 player = Player(0, 0, "triangle", "white")
 
-enemy = Sprite(0,100,"square","red")
+enemy = Sprite(0, 100,"square","red")
 enemy.dx = -1
 enemy.dy = -0.3
 
 powerup = Sprite(0, -100, "circle", "blue")
-powerup.dx = 1
-powerup.dy = 0.1
+powerup.dy = 1
+powerup.dx = 0.1
 
 #sprites list 
 sprites = []
 sprites.append(player)
 sprites.append(enemy)
 sprites.append(powerup)
+
 
 #keyboard binding
 wn.listen()
@@ -91,6 +111,9 @@ wn.onkeypress(player.rotate_right, "Right")
 
 wn.onkeyrelease(player.stop_rotating, "Left")
 wn.onkeyrelease(player.stop_rotating, "Right")
+
+wn.onkeypress(player.accelerate, "Up")
+wn.onkeyrelease(player.desaccelaration, "Up")
 
 #mainloop
 while True:
