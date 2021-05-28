@@ -10,17 +10,38 @@ wn.title("COVID BATTLE BY WAYSTER  DE MELO")
 wn.bgcolor("black")
 wn.tracer(0)
 
-
-
-
-
 pen = turtle.Turtle()
 pen.speed(0)
 pen.shape("square")
 pen.color("white")
 pen.penup()
 pen.hideturtle()
- 
+
+class Game():
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def render_border(self, pen):
+        pen.color("white")
+        pen.width(3)
+        pen.penup()
+        
+        left = -self.width/2.0
+        right = self.width/2.0
+        top = self.height/2.0
+        bottom = -self.height/2.0
+
+        pen.goto(left, top)
+        pen.pendown()
+        pen.goto(right, top)
+        pen.goto(right, bottom)
+        pen.goto(left, bottom)
+        pen.goto(left, top)
+        pen.penup()
+
+
+
 class Sprite():
     #constructor
     def __init__(self, x, y, shape, color):
@@ -34,6 +55,8 @@ class Sprite():
         self.da = 0
         self.thrust = 0.0
         self.acceleration = 0.2
+        self.health = 100
+        self.max_health = 100
 
     def update(self):
 
@@ -46,12 +69,54 @@ class Sprite():
         self.x += self.dx
         self.y += self.dy
 
+        self.border_check()
+
+    def border_check(self):
+        if self.x > game.width/2.0 - 10:
+            self.x = game.width/2.0 - 10
+            self.dx *= -1
+        elif self.x < -game.width/2.0 + 10:
+            self.x = -game.width/2.0 + 10
+            self.dx *= -1    
+
+        if self.y > game.height/2.0 - 10:
+            self.y = game.height/2.0 - 10
+            self.dy *= -1
+
+        elif self.y < -game.height/2.0 + 10:
+            self.y = -game.height/2.0 + 10
+            self.dy *= -1     
+
     def render(self, pen):
         pen.goto(self.x, self.y)
         pen.setheading(self.heading)
         pen.shape(self.shape)
         pen.color(self.color)
         pen.stamp()
+
+        self.render_health_meter(pen)
+
+    
+    #draw health meter
+    def render_health_meter(self, pen):
+        pen.goto(self.x - 10, self.y + 20)
+        pen.width(3)
+        pen.pendown()
+        pen.setheading(0)
+
+        if self.health/self.max_health < 0.3:
+            pen.color("red")
+        elif self.health/self.max_health < 0.7:
+            pen.color("yellow")
+        else:
+            pen.color("green")
+
+        pen.fd(20 * (self.health/self.max_health)) 
+        pen.color( "grey")
+        pen.fd(20 * ((self.max_health-self.health)/self.max_health)) 
+
+        pen.penup()   
+
 
 class Player(Sprite):
     def __init__(self, x, y, shape, color):
@@ -85,6 +150,12 @@ class Player(Sprite):
         pen.stamp()
 
         pen.shapesize(1.0, 1.0, None)
+        self.render_health_meter(pen)
+
+
+
+#create game obj
+game = Game(800, 600)
 
 #create player
 player = Player(0, 0, "triangle", "white")
@@ -130,6 +201,7 @@ while True:
     for sprite in sprites:
         sprite.render(pen)
    
+    game.render_border(pen)
 
     #update the screen
     wn.update()
